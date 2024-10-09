@@ -1,1 +1,10 @@
-responses
+yt-dlp
+fastapi
+uvicorn
+Jinja2
+python-multipart
+nltk
+bs4
+torch
+torchvision
+starlette

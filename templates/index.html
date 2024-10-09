@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atoms Bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 70%;
+            max-width: 100%;
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .chat-box {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+            border: 1px solid #3e3d3d;
+            border-radius: 4px;
+            background-color: #3e3d3d;
+            padding: 10px;
+        }
+        .message {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            max-width: 70%;
+            position: relative;
+            line-height: 2;
+        }
+        .question {
+            background-color: #c6c6c6;
+            color: black;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .answer {
+            max-width: 90%;
+            background-color: #3e3d3d;
+            color: white;
+        }
+        .processing {
+            background-color: #3e3d3d;
+            color: white;
+            font-style: italic;
+        }
+        .input-container {
+            display: flex;
+            padding: 20px 0 0 0;
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #3e3d3d;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 18px;
+            color: white;
+            background: #3e3d3d;
+        }
+        .input-container button {
+            padding: 10px 20px;
+            background-color: black;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .input-container button:hover {
+            background-color: rgba(17, 17, 17, 0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chat-box" class="chat-box"></div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Ask something..." autocomplete="off">
+            <button type="submit" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+<script>
+    const ws = new WebSocket("ws://localhost:8000/ws");
+    const chatBox = document.getElementById('chat-box');
+    const input = document.getElementById("user-input");
+
+    ws.onmessage = function(event) {
+        const response = event.data;
+        removeProcessingMessage();
+        displayMessage(response, "answer", true);  // Set `isHtml` to true for responses
+    };
+
+    function sendMessage() {
+        const question = input.value.trim();
+        if (question) {
+            displayMessage(question, "question", false);
+            displayProcessingMessage();
+            ws.send(question);
+            input.value = "";
+        }
+    }
+
+    function displayMessage(message, type, isHtml = false) {
+        const messageElement = document.createElement("div");
+        messageElement.className = `message ${type}`;
+
+        if (isHtml) {
+            // Insert HTML content if the message is a response
+            messageElement.innerHTML = message;
+        } else {
+            // Otherwise, treat it as plain text
+            messageElement.textContent = message;
+        }
+
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function displayProcessingMessage() {
+        const processingElement = document.createElement("div");
+        processingElement.className = "message processing";
+        processingElement.textContent = "Processing...";
+        chatBox.appendChild(processingElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function removeProcessingMessage() {
+        const processingElements = document.getElementsByClassName("processing");
+        while (processingElements.length > 0) {
+            processingElements[0].remove();
+        }
+    }
+
+    // Listen for the "Enter" key
+    input.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+</script>
+
+</body>
+</html>
